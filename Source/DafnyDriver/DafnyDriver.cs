@@ -607,6 +607,9 @@ namespace Microsoft.Dafny
         case DafnyOptions.CompilationTarget.Java:
           compiler = new Dafny.JavaCompiler(dafnyProgram.reporter);
           break;
+        case DafnyOptions.CompilationTarget.Php:
+          compiler = new Dafny.PhpCompiler(dafnyProgram.reporter);
+          break;
       }
 
       Method mainMethod;
