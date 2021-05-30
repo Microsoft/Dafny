@@ -1,10 +1,12 @@
-// RUN: %dafny /compile:0 "%s" > "%t"
-// RUN: %dafny /noVerify /compile:4 /compileTarget:cs "%s" >> "%t"
-// RUN: %dafny /noVerify /compile:4 /compileTarget:js "%s" >> "%t"
-// RUN: %dafny /noVerify /compile:4 /compileTarget:go "%s" >> "%t"
-// RUN: %dafny /noVerify /compile:4 /compileTarget:java "%s" >> "%t"
-// RUN: %diff "%s.expect" "%t"
-
+/*
+---
+!dafnyTestSpec
+compileTargetOverrides:
+    go:
+        expected:
+            outputFile: Numbers.dfy.go.expect
+            specialCaseReason: Inconsistent printing of rationals
+*/
 method Main() {
   Literals();
   Arithmetic();
