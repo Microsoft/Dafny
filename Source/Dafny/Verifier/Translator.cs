@@ -17886,6 +17886,12 @@ namespace Microsoft.Dafny {
         }
 
         return true;
+
+      } else if (expr is MatchExpr) {
+        var e = (MatchExpr)expr;
+        var ite = etran.DesugarMatchExpr(e);
+        return TrSplitExpr(ite, splits, position, heightLimit, inlineProtectedFunctions, apply_induction, etran);
+
       } else if (expr is StmtExpr) {
         var e = (StmtExpr)expr;
         // For an expression S;E in split position, the conclusion of S can be used as an assumption.  Unfortunately,
@@ -17921,14 +17927,14 @@ namespace Microsoft.Dafny {
         var module = f.EnclosingClass.EnclosingModuleDefinition;
         var functionHeight = module.CallGraph.GetSCCRepresentativeId(f);
 
-        if (functionHeight < heightLimit && f.Body != null && RevealedInScope(f) && !(f.Body.Resolved is MatchExpr)) {
+        if (functionHeight < heightLimit && f.Body != null && RevealedInScope(f)) {
           if (RefinementToken.IsInherited(fexp.tok, currentModule) &&
               f is Predicate && ((Predicate)f).BodyOrigin == Predicate.BodyOriginKind.DelayedDefinition &&
               (codeContext == null || !codeContext.MustReverify)) {
             // The function was inherited as body-less but is now given a body. Don't inline the body (since, apparently, everything
             // that needed to be proved about the function was proved already in the previous module, even without the body definition).
           } else if (!FunctionBodyIsAvailable(f, currentModule, currentScope, inlineProtectedFunctions)) {
-            // Don't inline opaque functions or foreign protected functions
+            // Don't inline opaque functions
           } else if (Attributes.Contains(f.Attributes, "no_inline")) {
             // User manually prevented inlining
           } else {
@@ -18165,6 +18171,12 @@ namespace Microsoft.Dafny {
     }
 
     private bool CanSafelyInline(FunctionCallExpr fexp, Function f) {
+      if (f is PrefixPredicate prefixPred && !prefixPred.ExtremePred.KNat) {
+        // A prefix predicate indexed by an ORDINAL has an implicit quantifier in its body, so don't inline it,
+        // because then we may end up with arbitrary expressions in triggers
+        return false;
+      }
+
       var visitor = new TriggersExplorer();
       visitor.Visit(f);
       return LinqExtender.Zip(f.Formals, fexp.Args).All(formal_concrete => CanSafelySubstitute(visitor.TriggerVariables, formal_concrete.Item1, formal_concrete.Item2));
