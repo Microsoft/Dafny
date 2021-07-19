@@ -2609,20 +2609,40 @@ module LabelDomination {
   class MyClass {
     var x: int
     method LabelNotInScope_Old(y: int) {
+      label GoodLabel:
       if y < 5 {
         label Treasure:
         assert true;
       }
       assert old(x) == old@Treasure(x);  // error: no label Treasure in scope
       assert 10 == old@WonderfulLabel(x);  // error: no label WonderfulLabel in scope
+      assert old(x) == old@GoodLabel(x);
+      assert old(x) == old@FutureLabel(x);  // error: no label FutureLabel in scope
+      label FutureLabel: {}
     }
     method LabelNotInScope_Unchanged(y: int) {
+      label GoodLabel:
       if y < 5 {
         label Treasure:
         assert true;
       }
       assert unchanged@Treasure(`x);  // error: no label Treasure in scope
       assert unchanged@WonderfulLabel(this);  // error: no label WonderfulLabel in scope
+      assert unchanged@GoodLabel(this);
+      assert unchanged@FutureLabel(this);  // error: no label FutureLabel in scope
+      label FutureLabel: {}
+    }
+    method LabelNotInScope_Fresh(y: int, c: MyClass) {
+      label GoodLabel:
+      if y < 5 {
+        label Treasure:
+        assert true;
+      }
+      assert fresh@Treasure(c);  // error: no label Treasure in scope
+      assert fresh@WonderfulLabel(c);  // error: no label WonderfulLabel in scope
+      assert fresh@GoodLabel(c);
+      assert fresh@FutureLabel(c);  // error: no label FutureLabel in scope
+      label FutureLabel: {}
     }
   }
 }
